@@ -25,13 +25,13 @@ jobs:
 
     steps:
     - name: Checkout efabless/mpw_precheck
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: efabless/mpw_precheck
         path: mpw_precheck
 
     - name: Checkout ${{ matrix.repo }}
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: efabless/${{ matrix.repo }}
         path: ${{ matrix.repo }}
@@ -40,7 +40,7 @@ jobs:
       uses: docker/setup-buildx-action@v2
 
     - name: Cache Docker layers
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: /tmp/.buildx-cache
         key: ${{ runner.os }}-buildx-${{ hashFiles('mpw_precheck/dependencies/Dockerfile') }}
@@ -65,7 +65,7 @@ jobs:
 
     - name: Cache PDK
       id: cache-pdk
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ${{ github.workspace }}/pdk
         key: ${{ runner.os }}-pdk-${{ hashFiles('**/volare.toml') }}
@@ -111,7 +111,7 @@ jobs:
         fi
 
     - name: Upload MPW Precheck output
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: mpw-precheck-results-${{ matrix.repo }}
