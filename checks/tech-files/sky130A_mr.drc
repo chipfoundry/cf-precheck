@@ -32,8 +32,10 @@
 #     * Change the default of sram_exclude to false
 #   2025-10-29 : 2025.10.29_01.10 release
 #     * Updated to be in line with the current Skywater required rules
+#   2025-11-21 : licon bar spacing for SP.15/16
+#     * Updated to 0.57 & 0.64 per feedback from SWT
 ##########################################################################################
-release = "2025.10.29_01.10"
+release = "2025.11.21_01.10"
 
 require "time"
 require "logger"
@@ -884,11 +886,19 @@ if FEOL
         "MR_licon.SP.4 : licon bar minimum space to licon square : 0.51um"
     )
     
-    # MRW_licon.SP.16: 0.19 width bar licons (post-maskgen) bar licon spacing < 0.51
-    #licon_bars.space(0.51, euclidian).output(
-    #    "MRW_licon.SP.16",
-    #    "MRW_licon.SP.16 : 0.19 width bar licons (post-maskgen) bar licon spacing < 0.51"
-    #)
+    # MRW_licon.SP.15: 0.25 um width bar licons (post-maskgen) bar licon spacing < 0.58
+    # 0.64 = (0.03 + 0.58 + 0.03)
+    licon_bars.space(0.64, euclidian).output(
+        "MRW_licon.SP.15",
+        "MRW_licon.SP.15 : 0.25 um width bar licons (post-maskgen) bar licon spacing < 0.64"
+    )
+
+    # MRW_licon.SP.16: 0.19 um width bar licons (post-maskgen) bar licon spacing < 0.51
+    # 0.57 (0.03 + 0.51 + 0.03)
+    licon_bars.space(0.57, euclidian).output(
+        "MRW_licon.SP.16",
+        "MRW_licon.SP.16 : 0.19 um width bar licons (post-maskgen) bar licon spacing < 0.57"
+    )
     
     # MR_licon.SP.5: tap_licon minimum space to tap edge abutting diff ≥ 0.06
     tap_licon = licon.and(tap)
