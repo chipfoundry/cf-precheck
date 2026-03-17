@@ -1,154 +1,107 @@
-# MPW Precheck
+# cf-precheck
 
-| :exclamation: :exclamation: :exclamation:  Important Note  :exclamation: :exclamation: :exclamation: |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Although still possible, running the mpw-precheck from outside Docker is no longer supported by efabless. If you choose to run directly through python, you bare full responsibility for the generated results |
+ChipFoundry MPW tapeout precheck tool. Validates user projects before shuttle submission by running a sequence of design-rule and consistency checks.
 
-## Prerequisites
-
-- Docker
-
-## Setup
-
-### Docker
-
-You can either build the docker locally or fetch it from dockerhub.
-
-#### Build Docker Locally
-
-To build the necessary docker locally, run:
+## Installation
 
 ```bash
-    cd dependencies
-    sh build-docker.sh
+pip install cf-precheck
 ```
 
-#### Pull Docker from Dockerhub
+### External tool dependencies
 
-To pull the necessary docker from [dockerhub](https://hub.docker.com/repository/docker/efabless/mpw_precheck/tags?page=1&ordering=last_updated), run:
+Some checks invoke external EDA tools that must be available on `$PATH`:
+
+- [KLayout](https://www.klayout.de/) — used by all Klayout DRC checks and the XOR check
+- [Magic](http://opencircuitdesign.com/magic/) — used by the optional Magic DRC check and LVS
+- [Netgen](http://opencircuitdesign.com/netgen/) — used by the LVS check
+
+## Usage
+
+```
+cf-precheck -i <project_dir> -p <pdk_path> -c <caravel_root> [options] [check ...]
+```
+
+### Required arguments
+
+| Flag | Description |
+|------|-------------|
+| `-i`, `--input-directory` | Path to the user project directory |
+| `-p`, `--pdk-path` | Path to the PDK installation (variant-specific, e.g. `$PDK_ROOT/sky130A`) |
+| `-c`, `--caravel-root` | Path to the golden Caravel root (or set `$GOLDEN_CARAVEL`) |
+
+### Optional arguments
+
+| Flag | Description |
+|------|-------------|
+| `-o`, `--output-directory` | Output directory (default: `<project>/precheck_results/<timestamp>`) |
+| `--magic-drc` | Include the Magic DRC check (off by default) |
+| `--skip-checks check [...]` | Skip specific checks |
+| `-v`, `--verbose` | Show verbose/debug output |
+| `--version` | Print version and exit |
+
+### Positional arguments
+
+Pass one or more check names to run only those checks. If omitted, all applicable checks are run.
+
+### Example
 
 ```bash
-    docker pull efabless/mpw_precheck:latest
+# Run all checks
+cf-precheck -i ./my_project -p $PDK_ROOT/sky130A -c ./caravel
+
+# Run only specific checks
+cf-precheck -i ./my_project -p $PDK_ROOT/sky130A -c ./caravel topcell_check gpio_defines
+
+# Include the optional Magic DRC check
+cf-precheck -i ./my_project -p $PDK_ROOT/sky130A -c ./caravel --magic-drc
+
+# Skip certain checks
+cf-precheck -i ./my_project -p $PDK_ROOT/sky130A -c ./caravel --skip-checks lvs oeb
 ```
 
-### Install the PDK
+## Checks
 
-If you don't have the pdk installed, please refer to the [caravel](https://github.com/efabless/caravel.git) Makefile.
+| Check | Description |
+|-------|-------------|
+| `topcell_check` | Validates the top cell name in the GDS |
+| `gpio_defines` | Validates GPIO directives in `verilog/rtl/user_defines.v` |
+| `pdn` | Power distribution network check |
+| `metal_check` | Metal density check |
+| `xor` | XOR comparison against the golden wrapper to detect out-of-bounds edits |
+| `magic_drc` | Full DRC using Magic *(optional, off by default)* |
+| `klayout_feol` | Klayout Front End Of Line DRC |
+| `klayout_beol` | Klayout Back End Of Line DRC |
+| `klayout_offgrid` | Klayout off-grid violations check |
+| `klayout_metal_minimum_clear_area_density` | Klayout metal density check |
+| `klayout_pin_label_purposes_overlapping_drawing` | Klayout pin/label overlap check |
+| `klayout_zero_area` | Klayout zero-area cell check |
+| `spike_check` | Detects voltage spikes in the design |
+| `illegal_cellname_check` | Detects cells with illegal names |
+| `oeb` | Output-enable-bar signal connectivity check |
+| `lvs` | Layout vs. Schematic check |
 
-## Before Using
+## Results
 
-- Before you run the precheck tool, make sure you go through https://opensource.google/docs/releasing/preparing/ and cover the requirements.
+Check results are saved to `<project>/.cf/project.json` under the `precheck` key:
 
-- Overwrite `verilog/gl/user_project_wrapper.v` with your synthesized netlist **make sure the netlist includes power information**. Keep on reading for this point to make more sense.
-
-- Make sure you have the top level GDS-II under a directory called `gds/`; thus containing `gds/user_project_wrapper.gds`, this directory should be compressed and the script will use your Makefile to uncompress it.
-
-- Please create a file `./third_party/used_external_repos.csv` and add to it all `repository name,commit hash` for any external github repository that you are using to build this project.
-
-- Please include any useful statistics about your design, i.e. cell count, core utilization, etc. in a `.csv` file under `./signoff/<macro-name>/final_summary_report.csv`. If you're using OpenLANE then, this file should be created
-  automatically in `<run path>/reports/final_summary_report.csv`.
-
-## What Does the Script Do?
-
-It runs a sequence of checks and aborts with the appropriate error message(s) if any of them fails.
-
-The steps are as follows:
-
-- **License**:
-  - The root directory of the project, submodules and third party libraries contain at least one approved license and does not contain any prohibitted license
-  - All source files contain an approved SPDX License and Copyright Headers
-- **Makefile**:
-  - Makefile targets contain at least compression and uncompression for the user_project_wrapper.gds file
-- **Defaults**:
-  - Contents of the project are different from the default content in [caravel_user_project](https://github.com/efabless/caravel_user_project.git) for digital projects
-    and [caravel_user_project_analog](https://github.com/efabless/caravel_user_project_analog.git)
-  - The user_project_wrapper.gds must be different from the default one found in [caravel_user_project](https://github.com/efabless/caravel_user_project.git) for digital projects
-    and [caravel_user_project_analog](https://github.com/efabless/caravel_user_project_analog.git) for analog projects
-- **Documentation**:
-  - Documentation file README.md exists and does not use any non-inclusive language
-- **Consistency**:
-  - Runs a series of checks on the user netlist (user_project_wrapper/user_analog_project_wrapper), and the top netlist (caravel/caravan) to make sure that both conform to the constraints put by the golden wrapper.
-    - Both Netlists share the following checks:
-      - Modeling check: check netlist is structural and doesn't contain behavioral constructs
-      - Complexity check: check netlist isn't empty and contains at least eight instances
-    - Remaining Top Netlist checks:
-      - Sub-module hooks: check the user wrapper submodule port connections match the golden wrapper ports
-      - Power check: check all submodules in the netlist are connected to power
-    - Remaining User Netlist checks:
-      - Ports check: check netlist port names match the golden wrapper ports
-      - Layout check: check netlist matches the provided user wrapper layout in terms of the number of instances, and the instance names
-- **GPIO Defines**:
-  - A verilog directives check that validates the project's 'verilog/rtl/user_defines.v' netlist.
-- **XOR**:
-  - No modification in the user_project_wrapper(versus default user_project_wrapper.gds in [caravel_user_project](https://github.com/efabless/caravel_user_project.git) for digital projects
-    and [caravel_user_project_analog](https://github.com/efabless/caravel_user_project_analog.git) for analog projects) outside the user defined area lower left corner (0,0) and upper right corner (2920, 3520)
-- **MagicDRC**:
-  - The user_project_wrapper.gds does not have any DRC violations(using magic vlsi tool)
-- **KlayoutBEOLDRC**:
-  - The user_project_wrapper.gds does not have any DRC violations(using klayout) in the [\_Back End Of Line* layers](https://skywater-pdk.readthedocs.io/en/main/rules/summary.html)
-- **KlayoutFEOLDRC**:
-  - The user_project_wrapper.gds does not have any DRC violations(using klayout) in the [\_Front End Of Line* layers](https://skywater-pdk.readthedocs.io/en/main/rules/summary.html)
-- **KlayoutOffgrid**:
-  - The user_project_wrapper.gds does not contain any shapes that have offgrid violations(rules [x.1b, x.3a, x.2, x.2c](https://skywater-pdk.readthedocs.io/en/main/rules/periphery.html))
-- **KlayoutMetalMinimumClearAreaDensity**:
-  - The user_project_wrapper.gds has metal density (for each of the 5 metal layers) that is the lower than the maximum metal density specified by
-    the [li1.pd.ld, m1.pd.ld, m2.pd.ld, m3.pd.ld, m4.pd.ld, m5.pd.ld rules](https://skywater-pdk.readthedocs.io/en/main/rules/periphery.html)
-- **LVS**:
-
-  **LVS is disabled on the platform by default, it is only enabled when running locally**
-  - Runs hierarchy check, soft check, lvs check, ERC check on the user project. For more information [click here](./checks/be_checks/README.md)
-- **OEB**:
-  - Runs oeb check, to make sure that user connected all needed oeb signals. For more information [click here](./checks/be_checks/README.md)
-
-## Current Assumptions
-
-- The user module name is `user_project_wrapper` (or `user_analog_project_wrapper' for caravel_user_project_analog)
-- The mpw precheck is executed from inside it's docker container where a golden copy of caravel exists and is specified by an environment variable called `GOLDEN_CARAVEL`.
-
-## LVS Configuration
-
-- In order for LVS and OEB checks to run successfully, the user must provide an lvs configuration file, that describes the hierarchy of the design, and give necessary information for running the checks. For extra information on how to write the configuration file [click here](./checks/be_checks/README.md)
-
-**NOTE : If running precheck from user project Makefile, LVS can be disabled by using `DISABLE_LVS` environment variable**
-
-## How To Run
-
-Mount the docker file:
-
-```bash
-export PDK_PATH=<Absolute path to the desired PDK 'variant specific'.>
-export INPUT_DIRECTORY=<Absolute path to the user project path>
-sh docker-mount.sh
+```json
+{
+  "precheck": {
+    "version": "1.0.0",
+    "timestamp": "2026-03-17T12:00:00+00:00",
+    "pdk": "sky130A",
+    "passed": false,
+    "checks": {
+      "topcell_check": { "status": "pass", "duration_s": 1.2 },
+      "gpio_defines": { "status": "fail", "duration_s": 0.8, "details": "..." }
+    }
+  }
+}
 ```
 
-Run the following command:
+Detailed logs are written to `<project>/precheck_results/<timestamp>/logs/precheck.log`.
 
-```
-usage: mpw_precheck.py [-h] --input_directory $INPUT_DIRECTORY --pdk_path $PDK_PATH [--output_directory OUTPUT_DIRECTORY] [--private] [check [check ...]]
+## License
 
-Runs the precheck tool by calling the various checks in order.
-
-positional arguments:
-
-  check                 Checks to be ran by the precheck (default: None)
-
-optional arguments:
-
-  -h, --help               show this help message and exit
-
-  -i, --input_directory    $INPUT_DIRECTORY
-                           INPUT_DIRECTORY, absolute Path to the project. (default: None)
-
-  -p, --pdk_path           $PDK_PATH
-                           PDK_PATH, points to the installation path of the pdk 'variant specific' (default: None)
-
-  -o, --output_directory   OUTPUT_DIRECTORY
-                           OUTPUT_DIRECTORY, default=<input_directory>/precheck_results. (default:None)
-
-  --private                If provided, precheck skips [License, Defaults, Documentation]
-                           checks used to qualify the project to as an Open Source Project (default: False)
-```
-
-## How to Troubleshoot Issues with Precheck
-
-See the following [document](./debug_precheck.md) for guidance on troubleshooting issues with precheck.
+Apache-2.0

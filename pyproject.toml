@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cf-precheck"
+dynamic = ["version"]
+description = "ChipFoundry MPW tapeout precheck tool"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.9"
+dependencies = [
+    "rich",
+    "klayout",
+    "numpy",
+    "pyverilog",
+    "pyyaml",
+    "requests",
+    "strsimpy",
+]
+
+[project.scripts]
+cf-precheck = "cf_precheck.cli:main"
+
+[tool.hatch.version]
+path = "src/cf_precheck/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cf_precheck"]

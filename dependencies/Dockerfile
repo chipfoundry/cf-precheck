@@ -28,9 +28,9 @@ RUN dnf -y install cairo-devel csh gperf && \
     dnf -y --enablerepo=crb install epel-release nasm && \
     dnf clean all
 
-# Install Python Requirements
+# Install cf-precheck from PyPI (includes all Python dependencies)
 RUN pip3 install --no-cache-dir --upgrade pip && \
-    pip3 install --no-cache-dir awscli boto3 colorama coloredlogs klayout numpy PySpice pyverilog pyyaml requests strsimpy
+    pip3 install --no-cache-dir cf-precheck
 
 # Installation for Iverilog
 ENV IVERILOG_ROOT=./iverilog
