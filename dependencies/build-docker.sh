@@ -15,4 +15,4 @@
 
 mkdir -p logs/docker
 echo "dir created"
-docker build --rm -t efabless/mpw_precheck:latest . | tee logs/docker/mpw_precheck.build.txt
+docker build --rm -t chipfoundry/mpw_precheck:latest . | tee logs/docker/mpw_precheck.build.txt
