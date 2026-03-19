@@ -76,7 +76,7 @@ cf-precheck -i ./my_project -p $PDK_ROOT/sky130A -c ./caravel --skip-checks lvs 
 | `klayout_metal_minimum_clear_area_density` | Klayout metal density check |
 | `klayout_pin_label_purposes_overlapping_drawing` | Klayout pin/label overlap check |
 | `klayout_zero_area` | Klayout zero-area cell check |
-| `spike_check` | Detects voltage spikes in the design |
+| `spike_check` | Detects invalid paths in the design |
 | `illegal_cellname_check` | Detects cells with illegal names |
 | `oeb` | Output-enable-bar signal connectivity check |
 | `lvs` | Layout vs. Schematic check |
