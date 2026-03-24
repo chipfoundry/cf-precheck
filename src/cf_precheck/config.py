@@ -193,9 +193,11 @@ def run_be_check(
     if check == "LVS":
         be_script = "run_be_checks"
         extra_args = "--nooeb"
+        tmp_dir = f"{output_directory}/tmp"
     elif check == "OEB":
         be_script = "run_oeb_check"
         extra_args = "--noextract" if (Path(report_path) / f"{design_name}.gds.spice.gz").exists() else ""
+        tmp_dir = f"{output_directory}/tmp_oeb"
     else:
         logging.error(f"Unknown backend check: {check}")
         return False
