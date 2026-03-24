@@ -58,8 +58,8 @@ ALL_CHECKS: OrderedDict[str, type[CheckManager]] = OrderedDict([
     (KlayoutZeroArea.__ref__, KlayoutZeroArea),
     (SpikeCheck.__ref__, SpikeCheck),
     (IllegalCellnameCheck.__ref__, IllegalCellnameCheck),
-    (Oeb.__ref__, Oeb),
     (Lvs.__ref__, Lvs),
+    (Oeb.__ref__, Oeb),
 ])
 
 

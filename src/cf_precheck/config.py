@@ -195,7 +195,7 @@ def run_be_check(
         extra_args = "--nooeb"
     elif check == "OEB":
         be_script = "run_oeb_check"
-        extra_args = ""
+        extra_args = "--noextract" if (Path(report_path) / f"{design_name}.gds.spice.gz").exists() else ""
     else:
         logging.error(f"Unknown backend check: {check}")
         return False
@@ -229,7 +229,7 @@ def run_be_check(
 
     be_env.update(os.environ)
     with open(log_file_path, "w") as be_log:
-        logging.info(f"Running: {be_script}")
+        logging.info(f"Running: {be_script} {extra_args}")
         logging.info(f"{check} output directory: {output_directory}")
         p = subprocess.run(be_cmd, stderr=be_log, stdout=be_log, env=be_env)
         stat = p.returncode
