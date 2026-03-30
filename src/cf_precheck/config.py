@@ -185,20 +185,21 @@ def run_be_check(
     log_path = f"{output_directory}/logs"
     report_path = f"{output_directory}/outputs/reports"
     log_file_path = f"{log_path}/{check}_check.log"
-    tmp_dir = f"{output_directory}/tmp"
-
-    for d in [log_path, tmp_dir, f"{output_directory}/outputs", report_path]:
-        os.makedirs(d, exist_ok=True)
 
     if check == "LVS":
         be_script = "run_be_checks"
         extra_args = "--nooeb"
+        tmp_dir = f"{output_directory}/tmp"
     elif check == "OEB":
         be_script = "run_oeb_check"
-        extra_args = ""
+        extra_args = "--noextract" if (Path(report_path) / f"{design_name}.gds.spice.gz").exists() else ""
+        tmp_dir = f"{output_directory}/tmp_oeb"
     else:
         logging.error(f"Unknown backend check: {check}")
         return False
+
+    for d in [log_path, tmp_dir, f"{output_directory}/outputs", report_path]:
+        os.makedirs(d, exist_ok=True)
 
     be_checks_dir = str(Path(__file__).parent / "be_checks")
 
@@ -229,7 +230,7 @@ def run_be_check(
 
     be_env.update(os.environ)
     with open(log_file_path, "w") as be_log:
-        logging.info(f"Running: {be_script}")
+        logging.info(f"Running: {be_script} {extra_args}")
         logging.info(f"{check} output directory: {output_directory}")
         p = subprocess.run(be_cmd, stderr=be_log, stdout=be_log, env=be_env)
         stat = p.returncode
