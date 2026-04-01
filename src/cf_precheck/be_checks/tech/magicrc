@@ -36,7 +36,9 @@ see no *
 catch {random seed}
 
 if {[string equal $::env(EXTRACT_STYLE) ""]} {
-    set tech_file $::env(PDK_ROOT)/$::env(PDK)/libs.tech/magic/$::env(PDK).tech
+    #set tech_file $::env(PDK_ROOT)/$::env(PDK)/libs.tech/magic/$::env(PDK).tech
+    # Work tech file is copied from pdk and subcutout style is added.
+    set tech_file $::env(WORK_ROOT)/$::env(PDK).tech
     #set tech_file $::env(LVS_ROOT)/tech/$::env(PDK)/$::env(PDK).tech
 
 } elseif {[string equal $::env(EXTRACT_STYLE) "nowell"]} {
