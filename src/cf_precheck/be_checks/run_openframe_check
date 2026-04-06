@@ -127,7 +127,7 @@ ERROR: Could not create $WORK_ROOT/cvcrc.oeb"
 	sed 's/cvc.log/cvc.oeb.log/' $WORK_ROOT/cvcrc >$WORK_ROOT/cvcrc.oeb
 fi
 
-if [[ $DESIGN_NAME == *openframe_project_wrapper ]]; then
+if [[ "$DESIGN_NAME" == *openframe_project_wrapper ]]; then
 	echo "c 6" >$WORK_ROOT/cvc.oeb.script
 	for ((i = 0; i <= 43; i++)); do
 		cat >>$WORK_ROOT/cvc.oeb.script <<-cvcin
@@ -152,7 +152,7 @@ if [[ $DESIGN_NAME == *openframe_project_wrapper ]]; then
 	done
 	echo "q" >>$WORK_ROOT/cvc.oeb.script
 else
-	echo "ERROR: unrecognized top block $DESIGN_NAME"
+	echo "ERROR: unrecognized top block >$DESIGN_NAME<"
 	exit 3
 fi
 
@@ -283,10 +283,21 @@ awk '
 			printf "?";
 		}
 	}
+	function IsLow(signal) {
+		return ( signal ~ /vss/ || signal ~ /VGND/ || signal == 0 );
+	}
+	function IsHigh(signal) {
+		return ( signal ~ /vccd/ || signal ~ /vdd/ || signal ~ /VPWR/ || signal == 1 );
+	}
 	END {
+		GPIO_TYPE["000"] = "USER_STD_ANALOG";
+		GPIO_TYPE["001"] = "USER_STD_INPUT";
+		GPIO_TYPE["110"] = "USER_STD_INPUT_OUTPUT";
+		GPIO_TYPE["111"] = "USER_STD_INPUT_PULL";
 		#print "oeb connections:", length(oeb_connections);
 		print " gpio |   in   |   out  | analog |  oeb min/sim/max  | Message";
 		     #"  xx  | xxxxxx | xxxxxx | xxxxxx | vxxx*/vxxx*/vxxx* |
+		delete messages;
 		for ( i in oeb_connections ) {
 			oeb_min[i] = ReplaceLoopback(oeb_min[i]);
 			oeb_sim[i] = ReplaceLoopback(oeb_sim[i]);
@@ -297,23 +308,6 @@ awk '
 					(i in fixed) ? fixed[i] : sprintf("%6d", out_connections[i]), \
 				(analog_connections[i] == 0) ? "" : sprintf("%6d", analog_connections[i]), \
 				oeb_min[i], oeb_sim[i], oeb_max[i];
-			if ( analog_connections[i] > 0 ) {
-				if ( in_connections[i] > 0 || (out_connections[i] > 0 && ! (i in fixed)) ) {  # both digital and analog
-					printf "Warning: both analog and digital connections";
-				} else if ( ! ( oeb_sim[i] ~ /vccd/ || oeb_sim[i] ~ /vdd/ ) ) {  # analog signals should disable output
-					printf "Warning: oeb expected high for analog";
-				}
-			} else if ( in_connections[i] > 0 && out_connections[i] == 0 ) {
-				if ( ! ( oeb_sim[i] ~ /vccd/ || oeb_sim[i] ~ /vdd/ ) ) {  # input only signals should never enable output
-					printf "Warning: oeb expected high for input only";
-				}
-			} else if ( out_connections[i] > 0 && ! (i in fixed) ) {
-				if ( oeb_min[i] !~ /vss/ ) {  # output signals must be enable-able
-					printf "ERROR: oeb must have possible low for output";
-				} else if ( in_connections[i] > 0 && oeb_sim[i] ~ /vss/ ) {  # input is always driven by user output in user mode
-					printf "Warning: output always drives input. sky130: OK for pull up/down.";
-				}
-			}
 			PrintBit(dm2_sim[i], dm2_connections[i]);
 			PrintBit(dm1_sim[i], dm1_connections[i]);
 			PrintBit(dm0_sim[i], dm0_connections[i]);
@@ -325,7 +319,167 @@ awk '
 			PrintBit(ib_mode_sim[i], ib_mode_connections[i]);
 			PrintBit(inp_dis_sim[i], inp_dis_connections[i]);
 			PrintBit(holdover_sim[i], holdover_connections[i]);
+			gpio_config = GPIO_TYPE[dm2[i] dm1[i] dm0[i]];
+			if ( gpio_config == "USER_STD_INPUT_PULL" ) {
+				if ( IsHigh(out_sim[i]) ) {
+					gpio_config = "USER_STD_INPUT_PULLUP";
+				} else {
+					gpio_config = "USER_STD_INPUT_PULLDOWN";
+				}
+			}
+			if ( gpio_config == "USER_STD_OUTPUT" && IsLow(input_dis_sim[i]) ) {
+				gpio_config = "USER_STD_BIDIRECTIONAL";
+			}
+			printf " -> %s ", gpio_config ? gpio_config : "UNKNOWN";
+			error_count = length(messages);
+			switch(gpio_config) {
+			case /USER_STD_INPUT_NOPULL/: {
+				if ( in_connections[i] == 0 ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: missing user input connection", i);
+				}
+				if ( out_connections[i] == 0 ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: ERROR: output connection required", i);
+				}
+				if ( oeb_connections[i] == 0 ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: ERROR: oeb connection required", i);
+				}
+				if ( analog_connections[i] > 0 ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: analog connection to user input gpio", i);
+				}
+				break;
+			}
+			case /USER_STD_INPUT_PULLDOWN/: {
+				if ( in_connections[i] == 0 ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: missing user input connection", i);
+				}
+				if ( out_connections[i] == 0 || ! IsLow(out_sim[i]) ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: ERROR: pulldown mode requires low output", i);
+				}
+				if ( oeb_connections[i] == 0 || ! IsLow(oeb_sim[i]) ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: ERROR: pulldown mode requires low oeb", i);
+				}
+				if ( analog_connections[i] ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: analog connection to user input gpio", i);
+				}
+				break;
+			}
+			case /USER_STD_INPUT_PULLUP/: {
+				if ( in_connections[i] == 0 ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: missing user input connection", i);
+				}
+				if ( out_connections[i] == 0 || ! IsHigh(out_sim[i]) ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: ERROR: pullup mode requires high output", i);
+				}
+				if ( oeb_connections[i] == 0 || ! IsLow(oeb_sim[i]) ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: ERROR: pullup mode requires low oeb", i);
+				}
+				if ( analog_connections[i] ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: analog connection to user input gpio", i);
+				}
+				break;
+			}
+			case /USER_STD_OUTPUT/: {
+				if ( in_connections[i] > 0 ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: ERROR: input connection to output gpio - undriven", i);
+				}
+				if ( out_connections[i] == 0 ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: ERROR: missing output connection for output gpio", i);
+				} else if ( i in fixed_out ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: output fixed at %s", i, fixed_out[i]);
+				}
+				if ( oeb_connections[i] == 0 ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: ERROR: missing oeb for output gpio", i);
+				} else if ( IsHigh(oeb_sim[i]) ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: oeb is always high - output disabled", i);
+				} else if ( ! IsLow(oeb_min[i]) ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: oeb is never low - output never enabled", i);
+				}
+				if ( analog_connections[i] ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: analog connection to output gpio", i);
+				}
+				break;
+			}
+			case /USER_STD_BIDIRECTIONAL/: {
+				if ( in_connections[i] == 0 ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: missing input connection to bidirectional gpio", i);
+				}
+				if ( out_connections[i] == 0 ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: ERROR: missing output connection for bidirectional gpio", i);
+				} else if ( i in fixed_out ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: output fixed at %s", i, fixed_out[i]);
+				}
+				if ( oeb_connections[i] == 0 ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: ERROR: missing oeb for bidirection gpio", i);
+				} else if ( IsHigh(oeb_sim[i]) ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: bidirectional oeb is always high - always input mode", i);
+				} else if ( IsLow(oeb_sim[i]) ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: bidirectional oeb is always low - always output mode", i);
+				} else {
+					if ( ! IsLow(oeb_min[i]) ) {
+						messages[length(messages)+1] = sprintf("GPIO %2d: Warning: oeb is never low - bidirectional output never enabled", i);
+					}
+					if ( ! IsHigh(oeb_max[i]) ) {
+						messages[length(messages)+1] = sprintf("GPIO %2d: Warning: oeb is never high - bidirectional input never enabled", i);
+					}
+				}
+				if ( analog_connections[i] ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: analog connection to bidirectional gpio", i);
+				}
+				break;
+			}
+			case /USER_STD_ANALOG/: {
+				if ( in_connections[i] > 0 ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: ERROR: input connection to analog gpio - undriven", i);
+				}
+				if ( out_connections[i] == 0 ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: ERROR: mode requires output connection", i);
+				}
+				if ( oeb_connections[i] == 0 ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: ERROR: mode requires oeb connection", i);
+				}
+				if ( analog_connections[i] == 0 ) {
+					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: missing analog connection to analog gpio", i);
+				}
+				break;
+			}
+			default: {
+				messages[length(messages)+1] = sprintf("GPIO %2d: Warning: unrecognized dm configuration - connectivity confirmation required", i);
+				if ( analog_connections[i] > 0 ) {
+					if ( in_connections[i] > 0 || (out_connections[i] > 0 && ! (i in fixed)) ) {  # both digital and analog
+						messages[length(messages)+1] = sprintf("GPIO %2d: Warning: both analog and digital connections", i);
+					} else if ( ! ( oeb_sim[i] ~ /vccd/ || oeb_sim[i] ~ /vdd/ ) ) {  # analog signals should disable output
+						messages[length(messages)+1] = sprintf("GPIO %2d: Warning: oeb expected high for analog", i);
+					}
+				} else if ( in_connections[i] > 0 && out_connections[i] == 0 ) {
+					if ( ! ( oeb_sim[i] ~ /vccd/ || oeb_sim[i] ~ /vdd/ ) ) {  # input only signals should never enable output
+						messages[length(messages)+1] = sprintf("GPIO %2d: Warning: oeb expected high for input only", i);
+					}
+				} else if ( out_connections[i] > 0 && ! (i in fixed) ) {
+					if ( oeb_min[i] !~ /vss/ ) {  # output signals must be enable-able
+						messages[length(messages)+1] = sprintf("GPIO %2d: ERROR: oeb must have possible low for output", i);
+					} else if ( in_connections[i] > 0 && oeb_sim[i] ~ /vss/ ) {  # input is always driven by output
+						messages[length(messages)+1] = sprintf("GPIO %2d: Warning: output always drives input. sky130: OK for pull up/down.", i);
+					}
+				}
+			}
+			}
+			if ( ! IsLow(vtrip_sim[i]) || ! IsLow(slow_sim[i]) || ! IsLow(analog_pol_sim[i]) || ! IsLow(analog_sel_sim[i]) || \
+					! IsLow(analog_en_sim[i]) || ! IsLow(ib_mode_sim[i]) || ! IsLow(holdover_sim[i]) ) {
+				messages[length(messages)+1] = sprintf("GPIO %2d: Warning: unrecognized configuration - expected vtrip, slow, analog*, ib, hold to be low", i);
+			}
+			new_errors = length(messages) - error_count;
+			if ( new_errors > 0 ) {
+				printf("%d warnings/errors", new_errors);
+			}
 			printf "\n";
+		}
+		if ( length(messages) == 0 ) {
+			printf("\nNo warnings or errors detected\n");
+		} else {
+			printf("\n*** Detected the following warnings and/or errors: ***\n");
+		}
+		for ( line = 1; line <= length(messages); line++) {
+			print messages[line];
 		}
 	}' $LOG_ROOT/cvc.oeb.log |
 	tee $WORK_ROOT/cvc.oeb.report
