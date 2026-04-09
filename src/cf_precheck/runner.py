@@ -17,6 +17,22 @@ from cf_precheck.config import file_hash, get_project_config, uncompress_gds
 from cf_precheck.logging import console, error_capture
 from cf_precheck.results import CheckResult, ResultsCollector
 
+# Non-TTY (CI/Fargate): Rich skips live check lines. Emit parseable progress on stderr for workers.
+_MACHINE_PROGRESS_ENV = "CF_PRECHECK_MACHINE_PROGRESS"
+_PROGRESS_PREFIX = "CF_PRECHECK_JSON\t"
+
+
+def _machine_progress_enabled() -> bool:
+    v = (os.environ.get(_MACHINE_PROGRESS_ENV) or "").strip().lower()
+    return v in ("1", "true", "yes")
+
+
+def _emit_machine_progress(payload: dict) -> None:
+    if not _machine_progress_enabled():
+        return
+    line = _PROGRESS_PREFIX + json.dumps({"v": 1, **payload}, separators=(",", ":"))
+    print(line, file=sys.stderr, flush=True)
+
 
 def _log_info(precheck_config: dict, project_config: dict) -> None:
     gds_info_path = precheck_config["log_path"].parent / "gds.info"
@@ -130,6 +146,10 @@ def run_precheck(
 
     logging.info(f"Running {total} checks: [{', '.join(sequence)}]")
 
+    _emit_machine_progress(
+        {"event": "checks_planned", "total": total, "refs": list(sequence)}
+    )
+
     for idx, ref in enumerate(sequence, start=1):
         check = get_check_manager(ref, precheck_config, project_config)
         surname = check.__surname__
@@ -139,6 +159,16 @@ def run_precheck(
         error_capture.start()
 
         is_tty = hasattr(console.file, "isatty") and console.file.isatty()
+
+        _emit_machine_progress(
+            {
+                "event": "check_start",
+                "index": idx,
+                "total": total,
+                "ref": ref,
+                "label": surname,
+            }
+        )
 
         if is_tty:
             console.print(_format_check_line(prefix, dots, "[info]RUNNING[/info]"))
@@ -171,6 +201,18 @@ def run_precheck(
             result = CheckResult(name=ref, surname=surname, status="fail", duration_s=elapsed, details=detail)
 
         collector.add(result)
+
+        _emit_machine_progress(
+            {
+                "event": "check_done",
+                "index": idx,
+                "total": total,
+                "ref": ref,
+                "label": surname,
+                "passed": passed,
+                "seconds": round(elapsed, 3),
+            }
+        )
 
         if is_tty:
             # Move cursor up one line and clear it, then print final status
