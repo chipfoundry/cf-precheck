@@ -72,7 +72,7 @@ jobs:
       if: steps.cache-pdk.outputs.cache-hit != 'true'
       run: |
         python3 -m pip install --upgrade --no-cache-dir ciel
-        ciel enable 0fe599b2afb6708d281543108caf8310912f54af --pdk-root ${{ github.workspace }}/pdk --pdk sky130A
+        ciel enable 40cee970d8a9b7eaea35a34fe7d6068f05721f0a --pdk-root ${{ github.workspace }}/pdk --pdk sky130A
       env:
         PDK_ROOT: ${{ github.workspace }}/pdk
 
