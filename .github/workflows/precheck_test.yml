@@ -53,7 +53,8 @@ jobs:
           --cache-to=type=local,dest=/tmp/.buildx-cache-new,mode=max \
           --output type=docker \
           --tag mpw_precheck:latest \
-          mpw_precheck/dependencies
+          -f mpw_precheck/dependencies/Dockerfile \
+          .
       timeout-minutes: 30
 
     - name: Build Docker image with current repo Python code
@@ -67,7 +68,7 @@ jobs:
         RUN pwd && ls -la /work && find /work -maxdepth 2 -name pyproject.toml -o -name setup.py
         RUN cat /work/mpw_precheck/src/cf_precheck/__init__.py
         RUN python3 -m pip install --no-cache-dir -U pip
-        RUN python3 -m pip install --no-deps /work/mpw_precheck
+        RUN python3 -m pip install --no-deps /work
         EOF
 
     - name: Move cache
