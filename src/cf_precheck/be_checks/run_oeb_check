@@ -33,8 +33,10 @@
 # Use cases
 # run_oeb_check [--noextract] [lvs_config_file [top_layout [layout_file]]]
 
+extract_flag=
 if [[ $1 == "--noextract" ]]; then
 	export EXTRACT_LAYOUT=no
+	extract_flag="$1"
 	shift
 else
 	export EXTRACT_LAYOUT=yes
@@ -54,6 +56,11 @@ fi
 
 CONFIG_FILE=$1
 DESIGN_NAME=${2:+"-d $2"}
+
+if [[ $DESIGN_NAME == *openframe_project_wrapper ]]; then
+	# OEB checks for openframe designs are done in a different program
+	exec $LVS_ROOT/run_openframe_check $extract_flag $CONFIG_FILE $DESIGN_NAME
+fi
 
 if [[ $# -ne 0 ]]; then # if config file not specified, skip and use current environment
 	source <($LVS_ROOT/set_lvs_env.py -c $CONFIG_FILE $DESIGN_NAME)

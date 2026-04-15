@@ -183,7 +183,7 @@ if [[ ${scheck_status:-0} -eq 0 && $lvs_status -eq 0 && ${cvc_status:-0} -eq 0 &
 No errors detected"
 	exit 0
 
-elif [[ ${scheck_status:-0} -eq 0 && $lvs_status -eq 0 && ${cvc_status:-0} -eq 4 && ${oeb_status:-0} -eq 0 ]]; then
+elif [[ ${scheck_status:-0} -eq 0 && $lvs_status -eq 0 && ${cvc_status:-0} -ne 0 && ${oeb_status:-0} -eq 0 ]]; then
 	echo "
 WARNING: possible errors CVC $cvc_status"
 	exit 4

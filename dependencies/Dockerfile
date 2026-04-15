@@ -67,7 +67,7 @@ RUN ./configure --prefix=/build && make -j4 && make install
 # Clone cvc
 RUN dnf -y --enablerepo=crb install libstdc++-static
 ENV CVC_ROOT=./cvc_rv
-RUN git clone --depth=1 --branch v1.1.5 https://github.com/d-m-bailey/cvc.git ${CVC_ROOT}
+RUN git clone --depth=1 --branch v1.1.7 https://github.com/d-m-bailey/cvc.git ${CVC_ROOT}
 WORKDIR $CVC_ROOT
 RUN autoreconf -vif && ./configure --disable-nls --prefix=/build && sed -i 's/api.parser.class/parser_class_name/' src/cdlParser.yy && make -j4 && make install
 
