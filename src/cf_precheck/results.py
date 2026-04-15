@@ -38,6 +38,7 @@ class CheckResult:
 @dataclass
 class ResultsCollector:
     pdk: str = ""
+    input_file_hash: Optional[str] = None
     results: list[CheckResult] = field(default_factory=list)
 
     def add(self, result: CheckResult) -> None:
@@ -95,13 +96,17 @@ class ResultsCollector:
         for r in self.results:
             checks_dict[r.name] = r.to_dict()
 
-        data["precheck"] = {
+        precheck_blob: dict = {
             "version": __version__,
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "pdk": self.pdk,
             "passed": self.all_passed,
             "checks": checks_dict,
         }
+        if self.input_file_hash:
+            precheck_blob["input_file_hash"] = self.input_file_hash
+
+        data["precheck"] = precheck_blob
 
         project_json_path.write_text(json.dumps(data, indent=2) + "\n")
         console.print(f"[dim]Results saved to {project_json_path}[/dim]")

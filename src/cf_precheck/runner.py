@@ -106,7 +106,15 @@ def run_precheck(
         skip=skip_checks,
     )
 
-    collector = ResultsCollector(pdk=pdk)
+    input_file_hash = None
+    gds_path = input_directory / f"gds/{project_config['user_module']}.gds"
+    if gds_path.exists():
+        try:
+            input_file_hash = file_hash(gds_path)
+        except Exception:
+            pass
+
+    collector = ResultsCollector(pdk=pdk, input_file_hash=input_file_hash)
     total = len(sequence)
     idx_width = len(str(total))
 
