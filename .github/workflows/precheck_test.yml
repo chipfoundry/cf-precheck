@@ -81,8 +81,19 @@ jobs:
       run: |
         echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
         pwd
-        ls -la "$GITHUB_WORKSPACE"
-        find "$GITHUB_WORKSPACE" -maxdepth 3 \( -name cf_precheck -o -name pyproject.toml \)
+        ls -la "$GITHUB_WORKSPACE/.."
+        find "$GITHUB_WORKSPACE/.." -maxdepth 3 \( -name cf_precheck -o -name pyproject.toml \)
+
+    - name: Inspect all repos on runner
+      run: |
+        echo "workspace=$GITHUB_WORKSPACE"
+        find /home/runner/work -maxdepth 4 -type d -name .git -print | while read d; do
+          repo="${d%/.git}"
+          echo "=== $repo ==="
+          git -C "$repo" rev-parse HEAD || true
+          git -C "$repo" status --short || true
+        done
+        grep -R --line-number 'some unique text from your change' /home/runner/work || true
 
     - name: Run Precheck
       run: |
