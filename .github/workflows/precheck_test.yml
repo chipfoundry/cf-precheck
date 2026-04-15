@@ -72,7 +72,7 @@ jobs:
       if: steps.cache-pdk.outputs.cache-hit != 'true'
       run: |
         python3 -m pip install --upgrade --no-cache-dir ciel
-        export CIEL_DATA_SOURCE=static-web:https://chipfoundry.github.io/ciel-releases
+        CIEL_DATA_SOURCE=static-web:https://chipfoundry.github.io/ciel-releases
         ciel enable 3e0e31dcce8519a7dbb82590346db16d91b7244f --pdk-root ${{ github.workspace }}/pdk --pdk sky130A
       env:
         PDK_ROOT: ${{ github.workspace }}/pdk
@@ -92,7 +92,7 @@ jobs:
         docker run \
           -v "$INPUT_DIR":"$INPUT_DIR" \
           -v "$PDK_ROOT":"$PDK_ROOT" \
-          -e "PDK_ROOT":"$PDK_ROOT" \
+          -e PDK_ROOT="$PDK_ROOT" \
           mpw_precheck:latest \
           cf-precheck \
             -i "$INPUT_DIR" \
