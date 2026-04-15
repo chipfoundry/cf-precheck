@@ -65,6 +65,7 @@ jobs:
         WORKDIR /work
         COPY . /work
         RUN pwd && ls -la /work && find /work -maxdepth 2 -name pyproject.toml -o -name setup.py
+        RUN cat /work/mpw_precheck/src/cf_precheck/__init__.py
         RUN python3 -m pip install --no-cache-dir -U pip
         RUN python3 -m pip install --no-deps /work/mpw_precheck
         EOF
