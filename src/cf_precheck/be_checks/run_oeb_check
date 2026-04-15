@@ -57,11 +57,6 @@ fi
 CONFIG_FILE=$1
 DESIGN_NAME=${2:+"-d $2"}
 
-if [[ $DESIGN_NAME == *openframe_project_wrapper ]]; then
-	# OEB checks for openframe designs are done in a different program
-	exec $LVS_ROOT/run_openframe_check $extract_flag $CONFIG_FILE $DESIGN_NAME
-fi
-
 if [[ $# -ne 0 ]]; then # if config file not specified, skip and use current environment
 	source <($LVS_ROOT/set_lvs_env.py -c $CONFIG_FILE $DESIGN_NAME)
 fi
@@ -73,6 +68,11 @@ export TOP_LAYOUT=${2:-$TOP_LAYOUT}
 export LAYOUT_FILE=${3:-$LAYOUT_FILE}
 
 export DESIGN_NAME=$TOP_LAYOUT
+
+if [[ $DESIGN_NAME == *openframe_project_wrapper ]]; then
+	# OEB checks for openframe designs are done in a different program with the current environment
+	exec $LVS_ROOT/run_openframe_check $extract_flag 
+fi
 
 echo "DESIGN NAME: $DESIGN_NAME"
 
