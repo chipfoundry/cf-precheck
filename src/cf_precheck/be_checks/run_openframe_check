@@ -460,7 +460,7 @@ awk '
 				break;
 			}
 			default: {
-				messages[length(messages)+1] = sprintf("GPIO %2d: Warning: unrecognized dm configuration - connectivity confirmation required", i);
+				messages[length(messages)+1] = sprintf("GPIO %2d: Warning: unrecognized dm configuration [%s%s%s]- connectivity confirmation required", i, dm2, dm1, dm0);
 				if ( analog_connections[i] > 0 ) {
 					if ( in_connections[i] > 0 || (out_connections[i] > 0 && ! (i in fixed)) ) {  # both digital and analog
 						messages[length(messages)+1] = sprintf("GPIO %2d: Warning: both analog and digital connections", i);
