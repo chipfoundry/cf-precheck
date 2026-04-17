@@ -307,6 +307,9 @@ awk '
 		     #"  xx  | xxxxxx | xxxxxx | xxxxxx | vxxx*/vxxx*/vxxx* |
 		delete messages;
 		for ( i in oeb_connections ) {
+			out_min[i] = ReplaceLoopback(out_min[i]);
+			out_sim[i] = ReplaceLoopback(out_sim[i]);
+			out_max[i] = ReplaceLoopback(out_max[i]);
 			oeb_min[i] = ReplaceLoopback(oeb_min[i]);
 			oeb_sim[i] = ReplaceLoopback(oeb_sim[i]);
 			oeb_max[i] = ReplaceLoopback(oeb_max[i]);
