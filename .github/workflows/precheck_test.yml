@@ -65,7 +65,7 @@ jobs:
           --cache-to=type=local,dest=/tmp/.buildx-cache-new,mode=max \
           --output type=docker \
           --tag mpw_precheck:latest \
-          mpw_precheck/dependencies
+          ${{ github.workspace }}/dependencies
       timeout-minutes: 30
 
     - name: Move cache
