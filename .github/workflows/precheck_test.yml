@@ -32,10 +32,19 @@ jobs:
         path: mpw_precheck
 
     - name: Checkout ${{ matrix.repo }}
+      if: matrix.repo != 'openframe_user_project'
       uses: actions/checkout@v4
       with:
         repository: chipfoundry/${{ matrix.repo }}
         path: ${{ matrix.repo }}
+
+    - name: Checkout ${{ matrix.repo }} using development branch to pass OEB check
+      if: matrix.repo == 'openframe_user_project'
+      uses: actions/checkout@v4
+      with:
+        repository: d-m-bailey/openframe_user_project-cf
+        path: ${{ matrix.repo }}
+        ref: CF_gpio_config
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
@@ -71,7 +80,7 @@ jobs:
         path: ${{ github.workspace }}/pdk
         key: ${{ runner.os }}-pdk-${{ hashFiles('**/ciel.toml') }}
 
-    - name: Update analog gpio definitions
+    - name: Temporarily update caravan gpio definitions to pass OEB check
       if: matrix.repo == 'caravel_user_project_analog'
       run: |
         gawk -i inplace '\
@@ -81,6 +90,15 @@ jobs:
           /USER_CONFIG_GPIO_27_/ {sub(/INVALID/, "USER_STD_OUTPUT"); print; next} \
           {sub(/INVALID/, "MGMT_STD_ANALOG"); print}' caravel_user_project_analog/verilog/rtl/user_defines.v
         cat caravel_user_project_analog/verilog/rtl/user_defines.v
+
+    - name: Temporarily update caravel gpio definitions to pass OEB check
+      if: matrix.repo == 'caravel_user_project'
+      run: |
+        gawk -i inplace '\
+          /USER_CONFIG_GPIO_[567]_/ {sub(/INVALID/, "USER_STD_OUTPUT"); print; next} \
+          /USER_CONFIG_GPIO_3._/ {sub(/INVALID/, "USER_STD_OUTPUT"); print; next} \
+          {sub(/INVALID/, "MGMT_STD_ANALOG"); print}' caravel_user_project/verilog/rtl/user_defines.v
+        cat caravel_user_project/verilog/rtl/user_defines.v
 
     - name: Install ciel and PDK
       if: steps.cache-pdk.outputs.cache-hit != 'true'
