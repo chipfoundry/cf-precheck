@@ -22,7 +22,7 @@ FROM rockylinux:9.3 as build
 RUN dnf -y update
 RUN dnf -y groupinstall "Development Tools"
 
-RUN dnf -y install cairo-devel csh gperf && \
+RUN dnf -y install cairo-devel csh gperf libcurl-devel expat-devel zlib-devel && \
     dnf -y install mesa-libGLU mesa-libGLU-devel ncurses-devel python3-devel python3-tkinter && \
     dnf -y install readline-devel tcl-devel time.x86_64 tk tk-devel wget Xvfb && \
     dnf -y --enablerepo=crb install epel-release nasm && \
