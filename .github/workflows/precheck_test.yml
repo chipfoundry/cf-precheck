@@ -71,7 +71,8 @@ jobs:
         path: ${{ github.workspace }}/pdk
         key: ${{ runner.os }}-pdk-${{ hashFiles('**/ciel.toml') }}
 
-    - name: Update gpio definitions
+    - name: Update analog gpio definitions
+      if: matrix.repo == 'caravel_user_project_analog'
       run: |
         gawk -i inplace '\
           /USER_CONFIG_GPIO_11_/ {sub(/INVALID/, "USER_STD_OUTPUT"); print; next} \
