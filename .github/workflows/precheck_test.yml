@@ -73,7 +73,7 @@ jobs:
 
     - name: Update gpio definitions
       run: |
-        gawk -i '\
+        gawk -i inplace '\
           /USER_CONFIG_GPIO_10_/ {sub(/INVALID/, "USER_STD_ANALOG"); next} \
           /USER_CONFIG_GPIO_25_/ {sub(/INVALID/, "USER_STD_ANALOG"); next} \
           /USER_CONFIG_GPIO_11_/ {sub(/INVALID/, "USER_STD_OUTPUT"); next} \
