@@ -30,6 +30,7 @@ RUN dnf -y install cairo-devel csh gperf libcurl-devel expat-devel zlib-devel &&
 
 # Install cf-precheck from PyPI (includes all Python dependencies)
 RUN pip3 install --no-cache-dir --upgrade pip && \
+    pip3 install --no-cache-dir "klayout==0.30.7" && \
     pip3 install --no-cache-dir cf-precheck
 
 # Installation for Iverilog
