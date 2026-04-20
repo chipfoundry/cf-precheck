@@ -81,6 +81,7 @@ jobs:
           /USER_CONFIG_GPIO_26_/ {sub(/INVALID/, "USER_STD_OUTPUT"); next} \
           /USER_CONFIG_GPIO_27_/ {sub(/INVALID/, "USER_STD_OUTPUT"); next} \
           {sub(/INVALID/, "MGMT_STD_ANALOG")}' caravel_user_project_analog/verilog/rtl/user_defines.v
+        cat caravel_user_project_analog/verilog/rtl/user_defines.v
 
     - name: Install ciel and PDK
       if: steps.cache-pdk.outputs.cache-hit != 'true'
