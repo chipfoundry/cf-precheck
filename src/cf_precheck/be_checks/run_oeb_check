@@ -642,10 +642,10 @@ if [[ $WORK_ROOT != $LOG_ROOT ]]; then
 fi
 
 # Remove comments from user_defines.v file
-if [[ -f verilog/rtl/user_defines.v ]]; then
-	perl -0777 -pe 's://.*?$::mg; s:/\*.*?\*/::sg' verilog/rtl/user_defines.v >$WORK_ROOT/user_defines.v
+if [[ -f $UPRJ_ROOT/verilog/rtl/user_defines.v ]]; then
+	perl -0777 -pe 's://.*?$::mg; s:/\*.*?\*/::sg' $UPRJ_ROOT/verilog/rtl/user_defines.v >$WORK_ROOT/user_defines.v
 else
-	echo "ERROR: Missing verilog/rtl/user_defines.v"
+	echo "ERROR: Missing $UPRJ_ROOT/verilog/rtl/user_defines.v"
 	touch $WORK_ROOT/user_defines.v
 fi
 
