@@ -71,7 +71,7 @@ export DESIGN_NAME=$TOP_LAYOUT
 
 if [[ $DESIGN_NAME == *openframe_project_wrapper ]]; then
 	# OEB checks for openframe designs are done in a different program with the current environment
-	exec $LVS_ROOT/run_openframe_check $extract_flag 
+	exec $LVS_ROOT/run_openframe_check $extract_flag
 fi
 
 echo "DESIGN NAME: $DESIGN_NAME"
@@ -782,7 +782,7 @@ awk -v padring=${PADRING_TYPE:-} '
 					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: user output connection to fixed input gpio - firmware override required", gpio);
 				}
 				if ( oeb_connections[i] > 0 && ! (i in fixed_oeb) ) {
-					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: user oeb to connection to fixed input gpio - firmware override required", gpio);
+					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: user oeb connection to fixed input gpio - firmware override required", gpio);
 				}
 				if ( analog_connections[i] ) {
 					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: analog connection to fixed input gpio - firmware override required", gpio);
@@ -794,7 +794,7 @@ awk -v padring=${PADRING_TYPE:-} '
 					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: user output connection to management input gpio ignored", gpio);
 				}
 				if ( oeb_connections[i] > 0 && ! (i in fixed_oeb) ) {
-					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: user oeb to connection management input gpio ignored", gpio);
+					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: user oeb connection to management input gpio ignored", gpio);
 				}
 				if ( analog_connections[i] ) {
 					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: analog connection to management input gpio", gpio);
@@ -809,7 +809,7 @@ awk -v padring=${PADRING_TYPE:-} '
 					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: user output connection to management output gpio ignored", gpio);
 				}
 				if ( oeb_connections[i] > 0 && ! (i in fixed_oeb) ) {
-					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: user oeb to connection management output gpio ignored", gpio);
+					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: user oeb connection to management output gpio ignored", gpio);
 				}
 				if ( analog_connections[i] ) {
 					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: analog connection to management output gpio", gpio);
@@ -821,7 +821,7 @@ awk -v padring=${PADRING_TYPE:-} '
 					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: user output connection to management bidirectional gpio ignored", gpio);
 				}
 				if ( oeb_connections[i] > 0 && ! (i in fixed_oeb) ) {
-					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: user oeb to connection management bidirectional gpio ignored", gpio);
+					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: user oeb connection to management bidirectional gpio ignored", gpio);
 				}
 				if ( analog_connections[i] ) {
 					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: analog connection to management bidirectional gpio", gpio);
@@ -836,7 +836,7 @@ awk -v padring=${PADRING_TYPE:-} '
 					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: user output connection to analog gpio ignored", gpio);
 				}
 				if ( oeb_connections[i] > 0 && ! (i in fixed_oeb) ) {
-					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: user oeb to connection analog gpio ignored", gpio);
+					messages[length(messages)+1] = sprintf("GPIO %2d: Warning: user oeb connection to analog gpio ignored", gpio);
 				}
 				break;
 			}
@@ -959,7 +959,7 @@ awk -v padring=${PADRING_TYPE:-} '
 			}
 			case //: {
 				printf "missing mode ";
-				messages[length(messages)+1] = sprintf("GPIO %2d: ERROR: missing gpio configuraton", gpio);
+				messages[length(messages)+1] = sprintf("GPIO %2d: ERROR: missing gpio configuration", gpio);
 				break;
 			}
 			default: {

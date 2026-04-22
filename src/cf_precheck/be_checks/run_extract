@@ -70,7 +70,7 @@ if grep -q '^style subcutout' $PDK_ROOT/$PDK/libs.tech/magic/${PDK}.tech; then
 	echo "Tech file already contains subcutout style. Patch not necessary."
 	cp $PDK_ROOT/$PDK/libs.tech/magic/${PDK}.tech $WORK_ROOT/.
 else
-	echo "Adding subcutout sytle to tech file."
+	echo "Adding subcutout style to tech file."
 	awk '
 	/^cifoutput/ {searching=1}
 	searching && /^end$/ {

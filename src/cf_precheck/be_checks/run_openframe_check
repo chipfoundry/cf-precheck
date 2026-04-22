@@ -465,7 +465,7 @@ awk '
 			default: {
 				messages[length(messages)+1] = sprintf("GPIO %2d: Warning: unrecognized dm configuration [%s%s%s]- connectivity confirmation required", i, dm2, dm1, dm0);
 				if ( analog_connections[i] > 0 ) {
-					if ( in_connections[i] > 0 || (out_connections[i] > 0 && ! (i in fixed)) ) {  # both digital and analog
+					if ( in_connections[i] > 0 || (out_connections[i] > 0 && ! (i in fixed_out)) ) {  # both digital and analog
 						messages[length(messages)+1] = sprintf("GPIO %2d: Warning: both analog and digital connections", i);
 					} else if ( ! ( oeb_sim[i] ~ /vccd/ || oeb_sim[i] ~ /vdd/ ) ) {  # analog signals should disable output
 						messages[length(messages)+1] = sprintf("GPIO %2d: Warning: oeb expected high for analog", i);
@@ -474,7 +474,7 @@ awk '
 					if ( ! ( oeb_sim[i] ~ /vccd/ || oeb_sim[i] ~ /vdd/ ) ) {  # input only signals should never enable output
 						messages[length(messages)+1] = sprintf("GPIO %2d: Warning: oeb expected high for input only", i);
 					}
-				} else if ( out_connections[i] > 0 && ! (i in fixed) ) {
+				} else if ( out_connections[i] > 0 && ! (i in fixed_out) ) {
 					if ( oeb_min[i] !~ /vss/ ) {  # output signals must be enable-able
 						messages[length(messages)+1] = sprintf("GPIO %2d: ERROR: oeb must have possible low for output", i);
 					} else if ( in_connections[i] > 0 && oeb_sim[i] ~ /vss/ ) {  # input is always driven by output
