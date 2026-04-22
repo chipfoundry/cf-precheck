@@ -147,17 +147,11 @@ Optional variable lists: `*` may be used as a wild card character.
    - If the log file shows errors, look for details in the error file.
    - Error device locations can be found in the respective `precheck_results/<tag>/tmp/ext/*.ext` files. (coordinates should be divided by 200).
 
-5. OEB check. Check for user oeb signal output to gpio cells.
-   The following conditions are errors.
-   - gpio with both digital (io_in/io_out) and analog (analog_io/gpio_analog) connections
-   - gpio with analog (analog_io/gpio_analog) and oeb not high
-   - gpio with only input (io_in) but oeb not high
-   - gpio with output (io_out) but oeb never low
-   The following condition is a warning.
-   - gpio with both input (io_in) and output (io_out) and oeb always low
+5. OEB check. Check user connections to gpio against configuration.
+   See [Chipfoundry gpio configuration checks](https://docs.google.com/spreadsheets/d/1nYYAiqxi1V9ZBvW9GzFHaRDODuWXLOA9Znsbq4re1Ek/edit?usp=sharing) for a table of ERRORS and warnings.
 
    Output:
-   - `precheck_results/<tag>/tmp/ext/<top_layout>.cdl.gz`: CDL file converted from extracted spice file.
-   - `precheck_results/<tag>/tmp/cvc.oeb.error.gz`: Detailed errors results.
+   - `precheck_results/<tag>/tmp_oeb/<top_layout>.cdl.gz`: CDL file converted from extracted spice file.
+   - `precheck_results/<tag>/tmp_oeb/cvc.oeb.error.gz`: Detailed errors results.
    - `precheck_results/<tag>/logs/cvc.oeb.log`: Log file with error summary.
    - `precheck_results/<tag>/outputs/reports/cvc.oeb.report`: List of each gpio, connection counts, and errors

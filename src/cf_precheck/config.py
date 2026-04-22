@@ -222,7 +222,7 @@ def run_be_check(
 
     be_cmd = ["bash", f"{be_checks_dir}/{be_script}", extra_args]
 
-    for lvs_key in ["EXTRACT_FLATGLOB", "EXTRACT_ABSTRACT", "LVS_FLATTEN", "LVS_NOFLATTEN", "LVS_IGNORE", "LVS_SPICE_FILES", "LVS_VERILOG_FILES", "LAYOUT_FILE"]:
+    for lvs_key in ["EXTRACT_FLATGLOB", "EXTRACT_ABSTRACT", "EXTRACT_CREATE_SUBCUT", "LVS_FLATTEN", "LVS_NOFLATTEN", "LVS_IGNORE", "LVS_SPICE_FILES", "LVS_VERILOG_FILES", "LAYOUT_FILE"]:
         if lvs_key in be_env:
             logging.info(f"{lvs_key}: {be_env[lvs_key]}")
         else:

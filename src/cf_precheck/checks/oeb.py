@@ -18,7 +18,7 @@ class Oeb:
     __ref__ = "oeb"
     __surname__ = "OEB"
     __supported_pdks__ = ["gf180mcuC", "gf180mcuD", "sky130A", "sky130B"]
-    __supported_type__ = ["analog", "digital", "mini"]
+    __supported_type__ = ["analog", "digital", "openframe", "mini"]
     __optional__ = False
 
     def __init__(self, precheck_config: dict, project_config: dict):
