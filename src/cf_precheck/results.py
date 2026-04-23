@@ -5,7 +5,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from rich.table import Table
 
@@ -21,6 +21,11 @@ class CheckResult:
     duration_s: float = 0.0
     details: Optional[str] = None
     reason: Optional[str] = None
+    # Structured per-check payload emitted into .cf/project.json and consumed
+    # by the platform UI (see cf_precheck/checks/_oeb_report.py for the OEB
+    # shape). Kept distinct from `details` so existing consumers that treat
+    # `details` as a human-readable string stay untouched.
+    report: Optional[dict[str, Any]] = None
 
     @property
     def display_name(self) -> str:
@@ -32,6 +37,8 @@ class CheckResult:
             d["details"] = self.details
         if self.reason:
             d["reason"] = self.reason
+        if self.report is not None:
+            d["report"] = self.report
         return d
 
 

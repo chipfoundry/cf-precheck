@@ -162,13 +162,30 @@ def run_precheck(
 
         captured_errors = error_capture.stop()
 
+        check_report = getattr(check, "report", None)
+        check_details = getattr(check, "details", None)
+
         if passed:
             status_str = "[pass]PASS[/pass]"
-            result = CheckResult(name=ref, surname=surname, status="pass", duration_s=elapsed)
+            result = CheckResult(
+                name=ref,
+                surname=surname,
+                status="pass",
+                duration_s=elapsed,
+                details=check_details,
+                report=check_report,
+            )
         else:
             status_str = "[fail]FAIL[/fail]"
-            detail = captured_errors[0] if captured_errors else None
-            result = CheckResult(name=ref, surname=surname, status="fail", duration_s=elapsed, details=detail)
+            fallback_detail = captured_errors[0] if captured_errors else None
+            result = CheckResult(
+                name=ref,
+                surname=surname,
+                status="fail",
+                duration_s=elapsed,
+                details=check_details or fallback_detail,
+                report=check_report,
+            )
 
         collector.add(result)
 
