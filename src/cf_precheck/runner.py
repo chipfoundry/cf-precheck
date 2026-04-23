@@ -12,6 +12,7 @@ from rich.panel import Panel
 from rich.text import Text
 
 from cf_precheck import __version__
+from cf_precheck._warning_filters import is_benign_warning
 from cf_precheck.check_manager import ALL_CHECKS, build_sequence, get_check_manager
 from cf_precheck.config import file_hash, get_project_config, uncompress_gds
 from cf_precheck.logging import console, error_capture
@@ -161,6 +162,11 @@ def run_precheck(
             devnull.close()
 
         captured_errors = error_capture.stop()
+        # Benign setup warnings (e.g. "Missing LVS configuration variable FOO")
+        # get logged before the real failure reason, so without this filter
+        # they end up as the FAIL summary line and mask the actual problem.
+        # Keep them in the log — just don't surface them as the fail summary.
+        significant_errors = [m for m in captured_errors if not is_benign_warning(m)]
 
         check_report = getattr(check, "report", None)
         check_details = getattr(check, "details", None)
@@ -177,7 +183,7 @@ def run_precheck(
             )
         else:
             status_str = "[fail]FAIL[/fail]"
-            fallback_detail = captured_errors[0] if captured_errors else None
+            fallback_detail = significant_errors[0] if significant_errors else None
             result = CheckResult(
                 name=ref,
                 surname=surname,
@@ -195,8 +201,8 @@ def run_precheck(
             console.file.flush()
         console.print(_format_check_line(prefix, dots, status_str, elapsed))
 
-        if not passed and captured_errors:
-            brief = captured_errors[0]
+        if not passed and significant_errors:
+            brief = significant_errors[0]
             if len(brief) > 120:
                 brief = brief[:117] + "..."
             console.print(f"         [dim]{brief}[/dim]")
