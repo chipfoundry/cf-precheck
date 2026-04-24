@@ -11,7 +11,14 @@ license = "Apache-2.0"
 requires-python = ">=3.9"
 dependencies = [
     "rich",
-    "klayout",
+    # Pin klayout to match the native toolchain in chipfoundry/mpw_precheck
+    # (RockyLinux 9 RPM: klayout-0.29.2). PyPI has shipped 0.30+ that are ABI-
+    # incompatible with the 0.29.2 native .so files baked in the base image,
+    # so leaving this unpinned causes `import pya` to fail with an
+    # `undefined symbol: _ZNK2db18shape_interactions...` ImportError after a
+    # `pip install --force-reinstall cf-precheck` on top of the base image.
+    # If the base image bumps its klayout RPM, bump this pin in lockstep.
+    "klayout==0.29.2",
     "numpy",
     "pyverilog",
     "pyyaml",
