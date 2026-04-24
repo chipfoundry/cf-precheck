@@ -1,5 +1,10 @@
-from pathlib import Path
+from __future__ import annotations
 
+import logging
+from pathlib import Path
+from typing import Any, Optional
+
+from cf_precheck.checks._oeb_report import parse_report_file, one_line_summary
 from cf_precheck.config import run_be_check
 
 
@@ -25,6 +30,8 @@ class Oeb:
         self.precheck_config = precheck_config
         self.project_config = project_config
         self.result = True
+        self.report: Optional[dict[str, Any]] = None
+        self.details: Optional[str] = None
 
         proj_type = project_config["type"]
         type_to_design = {
@@ -37,6 +44,43 @@ class Oeb:
         self.pdk_root = precheck_config["pdk_path"].parent
         self.pdk = precheck_config["pdk_path"].name
 
+    def _report_path(self) -> Path:
+        return Path(self.precheck_config["output_directory"]) / "outputs" / "reports" / "cvc.oeb.report"
+
+    def _collect_report(self) -> None:
+        """Populate ``self.report`` / ``self.details`` from the emitted report.
+
+        Must not raise: parse failures surface as a ``parse_error`` key on the
+        returned dict so the UI can still show the overall check status.
+        """
+        report_path = self._report_path()
+        if not report_path.exists():
+            self.report = {
+                "report_relpath": str(report_path),
+                "parse_error": "cvc.oeb.report not produced",
+            }
+            self.details = "OEB report not produced"
+            return
+
+        project_type = self.project_config.get("type")
+        design_hint: Optional[str] = None
+        if project_type == "analog":
+            design_hint = "caravan"
+        elif project_type in {"digital", "mini"}:
+            design_hint = "caravel"
+        elif project_type == "openframe":
+            design_hint = "openframe"
+
+        try:
+            self.report = parse_report_file(report_path, design_type=design_hint)
+        except Exception as exc:  # pragma: no cover - defensive
+            logging.warning("OEB report parse failed: %s", exc)
+            self.report = {
+                "report_relpath": str(report_path),
+                "parse_error": f"parser crashed: {exc}",
+            }
+        self.details = one_line_summary(self.report)
+
     def run(self) -> bool:
         self.result = run_oeb(
             self.precheck_config["input_directory"],
@@ -46,4 +90,5 @@ class Oeb:
             self.pdk_root,
             self.pdk,
         )
+        self._collect_report()
         return self.result
