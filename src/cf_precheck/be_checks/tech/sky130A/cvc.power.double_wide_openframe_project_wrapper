@@ -36,4 +36,3 @@ gpio_oeb[*] expectMin@0.0 expectMax@1.8
 gpio_out[*] expectMin@0.0 expectMax@1.8
 gpio_slow_sel[*] expectMin@0.0 expectMax@1.8
 gpio_vtrip_sel[*] expectMin@0.0 expectMax@1.8
-mask_rev[*] input min@0.0 max@1.8
