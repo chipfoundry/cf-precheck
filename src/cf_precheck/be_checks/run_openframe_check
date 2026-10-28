@@ -129,9 +129,9 @@ ERROR: Could not create $WORK_ROOT/cvcrc.oeb"
 fi
 
 if [[ "$DESIGN_NAME" == *openframe_project_wrapper ]]; then
-	# Standard openframe: 44 GPIOs (0..43). Double-wide: 59 GPIOs (0..58).
+	# Standard openframe: 44 GPIOs (0..43). Double-wide: 63 GPIOs (0..62).
 	if [[ "$DESIGN_NAME" == *double_wide* ]]; then
-		gpio_max=58
+		gpio_max=62
 	else
 		gpio_max=43
 	fi

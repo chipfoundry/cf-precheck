@@ -118,6 +118,16 @@ class XOR:
         else:
             golden_gds = self.precheck_config["caravel_root"] / f"gds/{self.project_config['golden_wrapper']}.gds"
 
+        if not golden_gds.exists():
+            hint = (
+                " Double-wide projects must pass the double-wide harness root as -c."
+                if self.project_config["type"] == "double_wide"
+                else ""
+            )
+            logging.error(f"Golden wrapper GDS not found: {golden_gds}.{hint}")
+            self.result = False
+            return self.result
+
         self.result = gds_xor_check(
             self.precheck_config["input_directory"],
             self.precheck_config["output_directory"],

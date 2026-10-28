@@ -72,7 +72,7 @@ Double-wide projects are detected when exactly one of these GDS files is present
 | User module | `double_wide_openframe_project_wrapper` |
 | Top module | `double_wide_chip_io` |
 | Golden wrapper | `double_wide_openframe_project_wrapper_empty` |
-| User area | 6754.63 × 4766.63 µm (59 GPIOs) |
+| User area | 6754.63 × 4766.63 µm (63 GPIOs) |
 
 Pass the double-wide **harness** root (not stock Caravel) as `-c`. That root must
 provide:
@@ -88,7 +88,7 @@ cf-precheck \
 ```
 
 XOR uses `erase_box_double_wide.tcl` (scaled openframe perimeter erase). OEB uses
-the openframe CVC path with GPIO indices `0..58`.
+the openframe CVC path with GPIO indices `0..62`.
 
 ## Checks
 
